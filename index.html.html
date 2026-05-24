@@ -147,6 +147,26 @@ body {
 .badge-cook { background: #d4edda; color: var(--green); }
 .badge-wfh  { background: #dce8f8; color: var(--blue); }
 .badge-out  { background: var(--warm); color: var(--muted); border: 1px solid var(--border); }
+.toggle-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.tog {
+  font-size: 8px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--warm);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.tog.on-cook { background: #d4edda; color: var(--green); border-color: var(--green); }
+.tog.on-wfh  { background: #dce8f8; color: var(--blue);  border-color: var(--blue); }
 
 /* MEAL SLOTS */
 .meal-slot {
@@ -626,6 +646,14 @@ function getMacros(slot, val) {
   return DATA.dinners.find(x => x.id === val)?.macros_you || null;
 }
 
+function toggleDay(e, day, field) {
+  e.stopPropagation();
+  plan[day][field] = !plan[day][field];
+  save();
+  renderWeek();
+  renderMacros();
+}
+
 function renderWeek() {
   document.getElementById('weekDate').textContent = getWeekDate();
   const container = document.getElementById('dayCards');
@@ -634,11 +662,12 @@ function renderWeek() {
     const p = plan[day];
     const div = document.createElement('div');
     div.className = 'day-card';
-    const badges = [
-      p.cook ? '<span class="badge badge-cook">Cook night</span>' : '',
-      p.wfh  ? '<span class="badge badge-wfh">WFH</span>' : '',
-      !p.cook && !p.wfh ? '<span class="badge badge-out">Leftovers/out</span>' : '',
-    ].join('');
+    const cookCls = p.cook ? 'tog on-cook' : 'tog';
+    const wfhCls  = p.wfh  ? 'tog on-wfh'  : 'tog';
+    const badges = `<div class="toggle-row">
+      <span class="${cookCls}" onclick="toggleDay(event,'${day}','cook')">🍳 Cook</span>
+      <span class="${wfhCls}"  onclick="toggleDay(event,'${day}','wfh')">🏠 WFH</span>
+    </div>`;
     let slotsHtml = '';
     SLOTS.forEach(slot => {
       const val = p[slot];
